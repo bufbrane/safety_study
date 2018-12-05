@@ -14,9 +14,14 @@ import requests
     Python版本：3.6.5 64-bit
     requests库版本：2.19.1
 
+测试环境：
+    系统版本：Ubuntu 18.04 LTS 64-bit
+    Python版本：2.7.15 64-bit
+    requests库版本：2.20.1
+
 注意事项：
 1. 使用方法：命令行运行（如下），参数为学号和密码（默认密码123456）
-$ python ./safety_study.py <student_id> [password]
+$ python safety_study.py <student_id> [password]
 
 2. 本脚本需要安装requests库和json库，使用pip命令安装：
 # pip install requests 
@@ -25,6 +30,9 @@ $ python ./safety_study.py <student_id> [password]
 3. 此学习网站需要客户端每分钟发送一次学习数据，因此本脚本必须保持运行直至时间刷满2小时。
 PS.必须保证运行满2个小时，尚无改进方法（毕竟前端调用无力改变后端的脑残设定）
 Linux用户可以试试作为后台进程运行。
+
+4. 如果想并行刷多个人的学习时间，建议用shell脚本开多进程。
+本脚本暂未提供刷多个人的学习时间的功能（因为这样有潜在的风险）
 
 '''
 
@@ -57,7 +65,7 @@ class ExamLogin(object):
             }
         self.data = "xuehao=" + uestc_id + "&" + \
                     "password=" + password + \
-                    "&postflag=1&cmd=login&role=0&%CC%E1%BD%BB=%B5%C7%C2%BC"
+                    "&postflag=1&cmd=login&role=0&%CC%E1%BD%BB=%B5%C7%C2%BC" # 这一串是固定内容，不要修改
 
     def get_page(self):
         r = requests.post(self.url, headers=self.headers, data=self.data)
@@ -94,7 +102,6 @@ class TimingPost(object):
     def get_page(self):
         r = requests.post(url=self.url, headers=self.headers, cookies=self.cookies, data=self.data)
         r.raise_for_status()
-
         jtext = json.loads(r.text)
         print( "学号：", self.uestc_id, "学习时间：", jtext['shichang'])
 
@@ -127,7 +134,7 @@ def main():
     # 每分钟POST一次学习动态（稳妥起见至少运行125分钟）
     for i in range(125):
         TimingPost(cookies, uestc_id).get_page()
-        time.sleep(60)  # 这是个阻塞函数
+        time.sleep(60)  # 这里是阻塞调用。愚以为没有必要在此使用非阻塞，毕竟后端计时不是并发的，有些事急不得
 
 if __name__ == '__main__':
     main()
