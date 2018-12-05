@@ -102,6 +102,7 @@ class TimingPost(object):
     def get_page(self):
         r = requests.post(url=self.url, headers=self.headers, cookies=self.cookies, data=self.data)
         r.raise_for_status()
+        #print(r.text)
         jtext = json.loads(r.text)
         print( "学号：", self.uestc_id, "学习时间：", jtext['shichang'])
 
